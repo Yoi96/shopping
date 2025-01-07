@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .cart {
+            margin-top: 20px;
+        }
+        .cart table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .cart table th, .cart table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        .cart-total {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+        .remove-btn {
+            background-color: #dc3545;
+        }
+        .remove-btn:hover {
+            background-color: #c82333;
+        }
+        select, input[type="number"] {
+            padding: 5px;
+            font-size: 16px;
+            width: 60px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Your Shopping Cart</h1>
+
+    <div class="cart">
+        <table id="cart-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="cart-items">
+                <!-- Cart items will be dynamically added here -->
+            </tbody>
+        </table>
+
+        <div class="cart-total">
+            <p><strong>Subtotal:</strong> $<span id="subtotal">0.00</span></p>
+            <p><strong>Shipping:</strong> $10.00</p>
+            <p><strong>Total:</strong> $<span id="total">0.00</span></p>
+        </div>
+
+        <button class="btn" onclick="checkout()">Proceed to Checkout</button>
+        <a href="index.html" class="btn">Back to Shop</a>
+    </div>
+
+    <script>
+        // Function to update the cart table and calculate totals
+        function updateCart() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const cartTable = document.getElementById('cart-items');
+            const subtotalElement = document.getElementById('subtotal');
+            const totalElement = document.getElementById('total');
+
+            // Clear the existing cart items
+            cartTable.innerHTML = '';
+
+            let subtotal = 0;
+
+            // Display each item in the cart
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td>
+                        <span id="quantity-display-${item.name}">
+                            <select id="quantity-select-${item.name}" onchange="updateQuantity('${item.name}', this.value)">
+                                ${getQuantityOptions(item.quantity)}
+                            </select>
+                            <input type="number" id="quantity-input-${item.name}" value="${item.quantity}" style="display: none;" onchange="updateQuantity('${item.name}', this.value)" min="1">
+                        </span>
+                    </td>
+                    <td>$${itemTotal.toFixed(2)}</td>
+                    <td><button class="btn remove-btn" onclick="removeFromCart('${item.name}')">Remove</button></td>
+                `;
+                cartTable.appendChild(row);
+            });
+
+            // Update the totals
+            subtotalElement.textContent = subtotal.toFixed(2);
+            totalElement.textContent = (subtotal + 10).toFixed(2); // Adding $10 for shipping
+        }
+
+        // Function to generate quantity options for the select dropdown
+        function getQuantityOptions(selectedQuantity) {
+            let options = '';
+            for (let i = 1; i <= 10; i++) {
+                options += `<option value="${i}" ${i === selectedQuantity ? 'selected' : ''}>${i}</option>`;
+            }
+            return options;
+        }
+
+        // Function to update the quantity of an item
+        function updateQuantity(itemName, newQuantity) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const item = cart.find(i => i.name === itemName);
+            if (item) {
+                item.quantity = parseInt(newQuantity, 10); // Update the quantity
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCart(); // Update the cart display
+            }
+        }
+
+        // Function to remove an item from the cart
+        function removeFromCart(itemName) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart = cart.filter(item => item.name !== itemName); // Remove the item by name
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCart(); // Update the cart display
+        }
+
+        // Function to handle checkout (just a placeholder for now)
+        function checkout() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            if (cart.length === 0) {
+                alert("Your cart is empty! Please add items to your cart.");
+            } else {
+                window.location.href = 'checkout.html'; // Redirect to the checkout page
+            }
+        }
+
+        // Initial call to update the cart on page load
+        window.onload = updateCart;
+    </script>
+
+</body>
+</html>
